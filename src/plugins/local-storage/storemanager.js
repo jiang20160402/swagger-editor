@@ -26,7 +26,7 @@ tags:
   description: "店铺的供货商信息操作"
 - name: "store_repository"
   description: "店铺的仓库信息操作"
-- name: "product"
+- name: "store_product"
   description: "商品相关信息操作"
 schemes:
 - "http"
@@ -583,7 +583,7 @@ paths:
         description: "创建的供应商对象"
         required: true
         schema:
-          $ref: "#definitions/StoreSupplier"
+          $ref: "#/definitions/StoreSupplier"
       responses:
         default:
           description: "操作成功"
@@ -689,7 +689,7 @@ paths:
         description: "创建的仓库对象"
         required: true
         schema:
-          $ref: "#definitions/StoreRepository"
+          $ref: "#/definitions/StoreRepository"
       responses:
         default:
           description: "操作成功"
@@ -780,7 +780,113 @@ paths:
           description: "给定的仓库ID无效"
         404:
           description: "没有找到该仓库"
-      
+  /store/product:
+    post:
+      tags:
+      - "store_product"
+      summary: "创建商品"
+      description: "创建商品"
+      operationId: "createStoreProduct"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "创建的商品对象"
+        required: true
+        schema:
+          $ref: "#/definitions/Product"
+      responses:
+        default:
+          description: "操作成功"
+    get:
+      tags:
+      - "store_product"
+      summary: "获取所有商品"
+      description: "获取该店铺的所有商品"
+      operationId: "getStoreProducts"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "操作成功"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Product"
+        400:
+          description: "操作无效"
+  /store/product/{productId}:
+    get:
+      tags:
+      - "store_product"
+      summary: "查询指定ID商品"
+      description: "查询指定ID商品"
+      operationId: "getStoreProductById"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "path"
+        name: "productId"
+        description: "商品ID"
+        required: true
+        type: "integer"
+        format: "int64"
+      responses:
+        200:
+          description: "操作成功"
+          schema:
+            $ref: "#/definitions/Product"
+        400:
+          description: "无效的商品ID"
+        404:
+          description: "未找到该商品"
+    put:
+      tags:
+      - "store_product"
+      summary: "更新指定商品信息"
+      description: "更新指定ID商品信息"
+      operationId: "updateStoreProductById"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "path"
+        name: "productId"
+        description: "商品ID"
+        required: true
+        type: "integer"
+        format: "int64"
+      - in: "body"
+        name: "body"
+        description: "更新的商品对象"
+        required: true
+        schema:
+          $ref: "#/definitions/Product"
+      responses:
+        400:
+          description: "给定的商品ID无效"
+        404:
+          description: "没有找到该商品"
+    delete:
+      tags:
+      - "store_product"
+      summary: "删除指定商品"
+      description: "删除指定ID商品"
+      operationId: "deleteStoreProductById"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "path"
+        name: "productId"
+        description: "商品ID"
+        required: true
+        type: "integer"
+        format: "int64"
+      responses:
+        400:
+          description: "给定的商品ID无效"
+        404:
+          description: "没有找到该商品"      
 definitions:
   User:
     type: "object"
@@ -939,4 +1045,87 @@ definitions:
         description: "联系电话"
       address:
         type: "string"
-        description: "地址"`
+        description: "地址"
+  Product:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      store_id:
+        type: "integer"
+        format: "int64"
+        description: "商品所属店铺ID"
+      supplier_id:
+        type: "integer"
+        format: "int64"
+        description: "商品供应商ID"
+      repository_id:
+        type: "integer"
+        format: "int64"
+        description: "商品所属仓库ID"
+      technic_id:
+        type: "integer"
+        format: "int64"
+        description: "商品工艺ID"
+      pattern_id:
+        type: "integer"
+        format: "int64"
+        description: "商品图案ID"
+      shape_id:
+        type: "integer"
+        format: "int64"
+        description: "商品器形ID"
+      type_id:
+        type: "integer"
+        format: "int64"
+        description: "商品类型ID"
+      brand_id:
+        type: "integer"
+        format: "int64"
+        description: "商品品牌ID"
+      itemcode:
+        type: "string"
+        description: "商品编号"
+      name:
+        type: "string"
+        description: "商品名"
+      purchase_price:
+        type: "integer"
+        format: "int64"
+        description: "商品进货价/成本"
+      selling_price:
+        type: "integer"
+        format: "int64"
+        description: "商品售价"
+      additional_cost:
+        type: "integer"
+        format: "int64"
+        description: "额外费用/包装费"
+      current_amount:
+        type: "integer"
+        format: "int64"
+        description: "商品当前库存"
+      alert_amount:
+        type: "integer"
+        format: "int64"
+        description: "商品警戒库存"
+      status:
+        type: "integer"
+        format: "int64"
+        description: "商品状态"
+      litpic:
+        type: "string"
+        description: "商品封面图"
+      piclist:
+        type: "string"
+        description: "商品图片列表"
+      addtime:
+        type: "integer"
+        format: "int64"
+        description: "商品添加时间"
+      modtime:
+        type: "integer"
+        format: "int64"
+        description: "商品修改时间"
+`

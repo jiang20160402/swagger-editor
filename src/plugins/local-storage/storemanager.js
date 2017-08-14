@@ -31,7 +31,7 @@ tags:
 schemes:
 - "http"
 paths:
-  /user:
+  /user/register:
     post:
       tags:
       - "user"
@@ -49,9 +49,32 @@ paths:
           $ref: "#/definitions/User"
       responses:
         default:
-          description: "successful operation"
+          schema:
+            $ref: "#/definitions/defaultResponse"
+          description: "操作结果"
+  /user/checkusername:
+    post:
+      tags:
+      - "user"
+      summary: "检查用户名是否存在"
+      description: "检查用户名是否存在"
+      operationId: "checkusername"
+      produces:
+      - "application/json"
+      parameters: 
+      - in: "body"
+        name: "body"
+        description: "准备注册的用户名"
+        required: true
+        schema:
+          $ref: "#/definitions/checkUsername"
+      responses:
+        default:
+          schema:
+            $ref: "#/definitions/defaultResponse"
+          description: "操作结果"
   /user/login:
-    get:
+    post:
       tags:
       - "user"
       summary: "用户登录"
@@ -60,32 +83,17 @@ paths:
       produces:
       - "application/json"
       parameters:
-      - name: "username"
-        in: "query"
-        description: "登录用户名"
+      - in: "body"
+        name: "body"
+        description: "登录的用户名，密码"
         required: true
-        type: "string"
-      - name: "password"
-        in: "query"
-        description: "登录密码"
-        required: true
-        type: "string"
+        schema:
+          $ref: "#/definitions/loginInfo"
       responses:
-        200:
-          description: "登录成功"
+        default:
           schema:
-            type: "string"
-          headers:
-            X-Rate-Limit:
-              type: "integer"
-              format: "int32"
-              description: "用户每小时允许的请求次数"
-            X-Expires-After:
-              type: "string"
-              format: "date-time"
-              description: "UTC格式的token超时时间"
-        400:
-          description: "用户名或密码错误"
+            $ref: "#/definitions/loginResponse"
+          description: "操作结果"
   /user/logout:
     get:
       tags:
@@ -99,19 +107,19 @@ paths:
       responses:
         default:
           description: "注销成功"
-  /user/{username}:
+  /user/{userid}:
     get:
       tags:
       - "user"
       summary: "通过用户名获取用户信息"
       description: ""
-      operationId: "getUserByName"
+      operationId: "getUserById"
       produces:
       - "application/json"
       parameters:
-      - name: "username"
+      - name: "userid"
         in: "path"
-        description: "查询的用户名，使用user1做测试"
+        description: "查询的用户ID"
         required: true
         type: "string"
       responses:
@@ -120,7 +128,7 @@ paths:
           schema:
             $ref: "#/definitions/User"
         400:
-          description: "提供的用户名无效"
+          description: "提供的用户ID无效"
         404:
           description: "没有找到该用户"
     put:
@@ -128,13 +136,13 @@ paths:
       - "user"
       summary: "更新用户信息"
       description: "只有用户登录后才能进行操作"
-      operationId: "updateUser"
+      operationId: "updateUserById"
       produces:
       - "application/json"
       parameters:
-      - name: "username"
+      - name: "userid"
         in: "path"
-        description: "需要更新的用户名"
+        description: "需要更新的用户ID"
         required: true
         type: "string"
       - in: "body"
@@ -153,22 +161,22 @@ paths:
       - "user"
       summary: "删除用户"
       description: "只有用户登录后才允许删除。"
-      operationId: "deleteUser"
+      operationId: "deleteUserById"
       produces:
       - "application/json"
       parameters:
-      - name: "username"
+      - name: "userid"
         in: "path"
-        description: "需要删除的用户名"
+        description: "需要删除的用户ID"
         required: true
         type: "string"
       responses:
         400:
-          description: "提供的用户名无效"
+          description: "提供的用户ID无效"
         404:
           description: "没有找到该用户"
       deprecated: true
-  /store:
+  /store/create:
     post:
       tags:
       - "store"
@@ -183,10 +191,11 @@ paths:
         description: "创建的店铺对象"
         required: true
         schema:
-          $ref: "#/definitions/Store"
+          $ref: "#/definitions/CreateStore"
       responses:
         default:
           description: "操作成功"
+  /store/getAll:
     get:
       tags:
       - "store"
@@ -201,7 +210,7 @@ paths:
           schema:
             type: "array"
             items:
-              $ref: "#/definitions/Store"
+              $ref: "#/definitions/ResponseStore"
         400:
           description: "操作无效"
   /store/{storeId}:
@@ -224,7 +233,7 @@ paths:
         200:
           description: "操作成功"
           schema:
-            $ref: "#/definitions/Store"
+            $ref: "#/definitions/ResponseStore"
         400:
           description: "提供的店铺ID无效"
         404:
@@ -248,7 +257,7 @@ paths:
         description: "更新的店铺对象"
         required: true
         schema:
-         $ref: "#/definitions/Store"
+         $ref: "#/definitions/ResponseStore"
       responses:
         400:
           description: "提供的店铺ID无效"
@@ -274,7 +283,7 @@ paths:
           description: "提供的店铺ID无效"
         404:
           description: "没有找到该店铺"
-  /store/customer:
+  /store/{storeId}/customer/create:
     post:
       tags:
       - "store_customer"
@@ -284,15 +293,22 @@ paths:
       produces:
       - "application/json"
       parameters:
+      - in: "path"
+        name: "storeId"
+        description: "店铺ID"
+        required: true
+        type: "integer"
+        format: "int64"
       - in: "body"
         name: "body"
         description: "创建的客户对象"
         required: true
         schema:
-          $ref: "#/definitions/StoreCustomer"
+          $ref: "#/definitions/CreateStoreCustomer"
       responses:
         default:
           description: "操作成功"
+  /store/{storeId}/customer/getAll:
     get:
       tags:
       - "store_customer"
@@ -301,16 +317,23 @@ paths:
       operationId: "getStoreCustomers"
       produces:
       - "application/json"
+      parameters: 
+      - in: "path"
+        name: "storeId"
+        description: "店铺ID"
+        required: true
+        type: "integer"
+        format: "int64"
       responses:
         200:
           description: "操作成功"
           schema:
             type: "array"
             items:
-              $ref: "#/definitions/StoreCustomer"
+              $ref: "#/definitions/ResponseStoreCustomer"
         400:
           description: "操作无效"
-  /store/customer/{customerId}:
+  /store/{storeId}/customer/{customerId}:
     get:
       tags:
       - "store_customer"
@@ -320,6 +343,12 @@ paths:
       produces:
       - "application/json"
       parameters:
+      - name: "storeId"
+        in: "path"
+        description: "店铺ID"
+        required: true
+        type: "integer"
+        format: "int64"
       - name: "customerId"
         in: "path"
         description: "客户ID"
@@ -330,7 +359,7 @@ paths:
         200:
           description: "操作成功"
           schema:
-            $ref: "#/definitions/StoreCustomer"
+            $ref: "#/definitions/ResponseStoreCustomer"
         400:
           description: "无效的客户ID"
         404:
@@ -344,6 +373,12 @@ paths:
       produces:
       - "application/json"
       parameters:
+      - name: "storeId"
+        in: "path"
+        description: "店铺ID"
+        required: true
+        type: "integer"
+        format: "int64"
       - name: "customerId"
         in: "path"
         description: "客户ID"
@@ -355,7 +390,7 @@ paths:
         description: "更新的客户对象"
         required: true
         schema:
-          $ref: "#/definitions/StoreCustomer"
+          $ref: "#/definitions/ResponseStoreCustomer"
       responses:
         400:
           description: "给定的客户ID无效"
@@ -370,17 +405,24 @@ paths:
       produces:
       - "application/json"
       parameters:
+      - name: "storeId"
+        in: "path"
+        description: "店铺ID"
+        required: true
+        type: "integer"
+        format: "int64"
       - name: "customerId"
         in: "path"
         description: "客户ID"
         required: true
-        type: "string"
+        type: "integer"
+        format: "int64"
       responses:
         400:
           description: "给定的客户ID无效"
         404:
           description: "没有找到该客户"
-  /store/employee:
+  /store/{storeId}/employee/create:
     post:
       tags:
       - "store_employee"
@@ -390,15 +432,22 @@ paths:
       produces:
       - "application/json"
       parameters:
+      - in: "path"
+        name: "storeId"
+        description: "店铺ID"
+        required: true
+        type: "integer"
+        format: "int64"
       - in: "body"
         name: "body"
         description: "创建的员工对象"
         required: true
         schema:
-          $ref: "#/definitions/StoreEmployee"
+          $ref: "#/definitions/CreateStoreEmployee"
       responses:
         default:
           description: "操作成功"
+  /store/{storeId}/employee/getAll:
     get:
       tags:
       - "store_employee"
@@ -407,16 +456,23 @@ paths:
       operationId: "getStoreEmployees"
       produces:
       - "application/json"
+      parameters:
+      - in: "path"
+        name: "storeId"
+        description: "店铺ID"
+        required: true
+        type: "integer"
+        format: "int64"
       responses:
         200:
           description: "操作成功"
           schema:
             type: "array"
             items:
-              $ref: "#/definitions/StoreEmployee"
+              $ref: "#/definitions/ResponseStoreEmployee"
         400:
           description: "操作无效"
-  /store/employee/{employeeId}:
+  /store/{storeId}/employee/{employeeId}:
     get:
       tags:
       - "store_employee"
@@ -426,6 +482,12 @@ paths:
       produces:
       - "application/json"
       parameters:
+      - in: "path"
+        name: "storeId"
+        description: "店铺ID"
+        required: true
+        type: "integer"
+        format: "int64"
       - name: "employeeId"
         in: "path"
         description: "员工ID"
@@ -436,7 +498,7 @@ paths:
         200:
           description: "操作成功"
           schema:
-            $ref: "#/definitions/StoreEmployee"
+            $ref: "#/definitions/ResponseStoreEmployee"
         400:
           description: "无效的员工ID"
         404:
@@ -450,6 +512,12 @@ paths:
       produces:
       - "application/json"
       parameters:
+      - in: "path"
+        name: "storeId"
+        description: "店铺ID"
+        required: true
+        type: "integer"
+        format: "int64"
       - name: "employeeId"
         in: "path"
         description: "员工ID"
@@ -461,7 +529,7 @@ paths:
         description: "更新的员工对象"
         required: true
         schema:
-          $ref: "#/definitions/StoreEmployee"
+          $ref: "#/definitions/ResponseStoreEmployee"
       responses:
         400:
           description: "给定的员工ID无效"
@@ -476,6 +544,12 @@ paths:
       produces:
       - "application/json"
       parameters:
+      - in: "path"
+        name: "storeId"
+        description: "店铺ID"
+        required: true
+        type: "integer"
+        format: "int64"
       - name: "employeeId"
         in: "path"
         description: "员工ID"
@@ -486,7 +560,7 @@ paths:
           description: "给定的员工ID无效"
         404:
           description: "没有找到该员工"
-  /store/employee/role:
+  /store/{storeId}/employee/role/create:
     post:
       tags:
       - "store_employee"
@@ -496,15 +570,22 @@ paths:
       produces:
       - "application/json"
       parameters:
+      - in: "path"
+        name: "storeId"
+        description: "店铺ID"
+        required: true
+        type: "integer"
+        format: "int64"
       - in: "body"
         name: "body"
         description: "创建的角色对象"
         required: true
         schema:
-          $ref: "#/definitions/StoreEmployeeRole"
+          $ref: "#/definitions/CreateStoreEmployeeRole"
       responses:
         default:
           description: "操作成功"
+  /store/{storeId}/employee/role/getAll:
     get:
       tags:
       - "store_employee"
@@ -513,16 +594,23 @@ paths:
       operationId: "getStoreEmployeeRoles"
       produces:
       - "application/json"
+      parameters: 
+      - in: "path"
+        name: "storeId"
+        description: "店铺ID"
+        required: true
+        type: "integer"
+        format: "int64"
       responses:
         200:
           description: "操作成功"
           schema:
             type: "array"
             items:
-              $ref: "#/definitions/StoreEmployeeRole"
+              $ref: "#/definitions/ResponseStoreEmployeeRole"
         400:
           description: "操作无效"
-  /store/employee/role/{roleId}:
+  /store/{storeId}/employee/role/{roleId}:
     put:
       tags:
       - "store_employee"
@@ -532,6 +620,12 @@ paths:
       produces:
       - "application/json"
       parameters:
+      - in: "path"
+        name: "storeId"
+        description: "店铺ID"
+        required: true
+        type: "integer"
+        format: "int64"
       - name: "roleId"
         in: "path"
         description: "角色ID"
@@ -543,7 +637,7 @@ paths:
         description: "更新的角色对象"
         required: true
         schema:
-          $ref: "#definitions/StoreEmployeeRole"
+          $ref: "#definitions/ResponseStoreEmployeeRole"
       responses:
         400:
           description: "给定的角色ID无效"
@@ -558,6 +652,12 @@ paths:
       produces:
       - "application/json"
       parameters:
+      - in: "path"
+        name: "storeId"
+        description: "店铺ID"
+        required: true
+        type: "integer"
+        format: "int64"
       - name: "roleId"
         in: "path"
         description: "角色ID"
@@ -568,7 +668,7 @@ paths:
           description: "给定的角色ID无效"
         404:
           description: "没有找到该角色"
-  /store/supplier:
+  /store/{storeId}/supplier/create:
     post:
       tags:
       - "store_supplier"
@@ -578,15 +678,22 @@ paths:
       produces:
       - "application/json"
       parameters:
+      - in: "path"
+        name: "storeId"
+        description: "店铺ID"
+        required: true
+        type: "integer"
+        format: "int64"
       - in: "body"
         name: "body"
         description: "创建的供应商对象"
         required: true
         schema:
-          $ref: "#/definitions/StoreSupplier"
+          $ref: "#/definitions/CreateStoreSupplier"
       responses:
         default:
           description: "操作成功"
+  /store/{storeId}/supplier/getAll:
     get:
       tags:
       - "store_supplier"
@@ -595,16 +702,23 @@ paths:
       operationId: "getStoreSuppliers"
       produces:
       - "application/json"
+      parameters: 
+      - in: "path"
+        name: "storeId"
+        description: "店铺ID"
+        required: true
+        type: "integer"
+        format: "int64"
       responses:
         200:
           description: "操作成功"
           schema:
             type: "array"
             items:
-              $ref: "#/definitions/StoreSupplier"
+              $ref: "#/definitions/ResponseStoreSupplier"
         400:
           description: "操作无效"
-  /store/supplier/{supplierId}:
+  /store/{storeId}/supplier/{supplierId}:
     get:
       tags:
       - "store_supplier"
@@ -615,6 +729,12 @@ paths:
       - "application/json"
       parameters:
       - in: "path"
+        name: "storeId"
+        description: "店铺ID"
+        required: true
+        type: "integer"
+        format: "int64"
+      - in: "path"
         name: "supplierId"
         description: "供应商ID"
         required: true
@@ -624,7 +744,7 @@ paths:
         200:
           description: "操作成功"
           schema:
-            $ref: "#/definitions/StoreSupplier"
+            $ref: "#/definitions/ResponseStoreSupplier"
         400:
           description: "无效的供应商ID"
         404:
@@ -638,6 +758,12 @@ paths:
       - "application/json"
       parameters:
       - in: "path"
+        name: "storeId"
+        description: "店铺ID"
+        required: true
+        type: "integer"
+        format: "int64"
+      - in: "path"
         name: "supplierId"
         description: "供应商ID"
         required: true
@@ -648,7 +774,7 @@ paths:
         description: "更新的供应商对象"
         required: true
         schema:
-          $ref: "#/definitions/StoreSupplier"
+          $ref: "#/definitions/ResponseStoreSupplier"
       responses:
         400:
           description: "给定的供应商ID无效"
@@ -664,6 +790,12 @@ paths:
       - "application/json"
       parameters:
       - in: "path"
+        name: "storeId"
+        description: "店铺ID"
+        required: true
+        type: "integer"
+        format: "int64"
+      - in: "path"
         name: "supplierId"
         description: "供应商ID"
         required: true
@@ -674,7 +806,7 @@ paths:
           description: "给定的供应商ID无效"
         404:
           description: "没有找到该供应商"
-  /store/repository:
+  /store/{storeId}/repository/create:
     post:
       tags:
       - "store_repository"
@@ -684,15 +816,22 @@ paths:
       produces:
       - "application/json"
       parameters:
+      - in: "path"
+        name: "storeId"
+        description: "店铺ID"
+        required: true
+        type: "integer"
+        format: "int64"
       - in: "body"
         name: "body"
         description: "创建的仓库对象"
         required: true
         schema:
-          $ref: "#/definitions/StoreRepository"
+          $ref: "#/definitions/CreateStoreRepository"
       responses:
         default:
           description: "操作成功"
+  /store/{storeId}/respository/getAll:
     get:
       tags:
       - "store_repository"
@@ -701,16 +840,23 @@ paths:
       operationId: "getStoreRepositorys"
       produces:
       - "application/json"
+      parameters:
+      - in: "path"
+        name: "storeId"
+        description: "店铺ID"
+        required: true
+        type: "integer"
+        format: "int64"
       responses:
         200:
           description: "操作成功"
           schema:
             type: "array"
             items:
-              $ref: "#/definitions/StoreRepository"
+              $ref: "#/definitions/ResponseStoreRepository"
         400:
           description: "操作无效"
-  /store/repository/{repositoryId}:
+  /store/{storeId}/repository/{repositoryId}:
     get:
       tags:
       - "store_repository"
@@ -721,6 +867,12 @@ paths:
       - "application/json"
       parameters:
       - in: "path"
+        name: "storeId"
+        description: "店铺ID"
+        required: true
+        type: "integer"
+        format: "int64"
+      - in: "path"
         name: "repositoryId"
         description: "仓库ID"
         required: true
@@ -730,7 +882,7 @@ paths:
         200:
           description: "操作成功"
           schema:
-            $ref: "#/definitions/StoreRepository"
+            $ref: "#/definitions/ResponseStoreRepository"
         400:
           description: "无效的仓库ID"
         404:
@@ -744,6 +896,12 @@ paths:
       - "application/json"
       parameters:
       - in: "path"
+        name: "storeId"
+        description: "店铺ID"
+        required: true
+        type: "integer"
+        format: "int64"
+      - in: "path"
         name: "repositoryId"
         description: "仓库ID"
         required: true
@@ -754,7 +912,7 @@ paths:
         description: "更新的仓库对象"
         required: true
         schema:
-          $ref: "#/definitions/StoreRepository"
+          $ref: "#/definitions/ResponseStoreRepository"
       responses:
         400:
           description: "给定的仓库ID无效"
@@ -770,6 +928,12 @@ paths:
       - "application/json"
       parameters:
       - in: "path"
+        name: "storeId"
+        description: "店铺ID"
+        required: true
+        type: "integer"
+        format: "int64"
+      - in: "path"
         name: "repositoryId"
         description: "仓库ID"
         required: true
@@ -780,7 +944,7 @@ paths:
           description: "给定的仓库ID无效"
         404:
           description: "没有找到该仓库"
-  /store/product:
+  /store/{storeId}/product/create:
     post:
       tags:
       - "store_product"
@@ -790,15 +954,22 @@ paths:
       produces:
       - "application/json"
       parameters:
+      - in: "path"
+        name: "storeId"
+        description: "店铺ID"
+        required: true
+        type: "integer"
+        format: "int64"
       - in: "body"
         name: "body"
         description: "创建的商品对象"
         required: true
         schema:
-          $ref: "#/definitions/Product"
+          $ref: "#/definitions/CreateProduct"
       responses:
         default:
           description: "操作成功"
+  /store/{storeId}/product/getAll:
     get:
       tags:
       - "store_product"
@@ -807,16 +978,23 @@ paths:
       operationId: "getStoreProducts"
       produces:
       - "application/json"
+      parameters: 
+      - in: "path"
+        name: "storeId"
+        description: "店铺ID"
+        required: true
+        type: "integer"
+        format: "int64"
       responses:
         200:
           description: "操作成功"
           schema:
             type: "array"
             items:
-              $ref: "#/definitions/Product"
+              $ref: "#/definitions/ResponseProduct"
         400:
           description: "操作无效"
-  /store/product/{productId}:
+  /store/{storeId}/product/{productId}:
     get:
       tags:
       - "store_product"
@@ -827,6 +1005,12 @@ paths:
       - "application/json"
       parameters:
       - in: "path"
+        name: "storeId"
+        description: "店铺ID"
+        required: true
+        type: "integer"
+        format: "int64"
+      - in: "path"
         name: "productId"
         description: "商品ID"
         required: true
@@ -836,7 +1020,7 @@ paths:
         200:
           description: "操作成功"
           schema:
-            $ref: "#/definitions/Product"
+            $ref: "#/definitions/ResponseProduct"
         400:
           description: "无效的商品ID"
         404:
@@ -851,6 +1035,12 @@ paths:
       - "application/json"
       parameters:
       - in: "path"
+        name: "storeId"
+        description: "店铺ID"
+        required: true
+        type: "integer"
+        format: "int64"
+      - in: "path"
         name: "productId"
         description: "商品ID"
         required: true
@@ -861,7 +1051,7 @@ paths:
         description: "更新的商品对象"
         required: true
         schema:
-          $ref: "#/definitions/Product"
+          $ref: "#/definitions/ResponseProduct"
       responses:
         400:
           description: "给定的商品ID无效"
@@ -877,6 +1067,12 @@ paths:
       - "application/json"
       parameters:
       - in: "path"
+        name: "storeId"
+        description: "店铺ID"
+        required: true
+        type: "integer"
+        format: "int64"
+      - in: "path"
         name: "productId"
         description: "商品ID"
         required: true
@@ -891,9 +1087,6 @@ definitions:
   User:
     type: "object"
     properties:
-      id:
-        type: "integer"
-        format: "int64"
       username:
         type: "string"
         description: "用户名"
@@ -906,17 +1099,26 @@ definitions:
       phone:
         type: "string"
         description: "联系电话"
-      litpic:
-        type: 'string'
-        description: "头像"
-      remark:
-        type: 'string'
-        description: "备注信息"
-      userStatus:
+  CreateStore:
+    type: "object"
+    properties:
+      user_id:
         type: "integer"
-        format: "int32"
-        description: "用户状态"
-  Store:
+        format: "int64"
+        description: "创建该店铺的用户id"
+      name:
+        type: "string"
+        description: "店铺名"
+      linkman:
+        type: "string"
+        description: "联系人"
+      phone:
+        type: "string"
+        description: "联系电话"
+      address:
+        type: "string"
+        description: "店铺地址"
+  ResponseStore:
     type: "object"
     properties:
       id:
@@ -937,8 +1139,23 @@ definitions:
         description: "联系电话"
       address:
         type: "string"
-        description: "店铺地址"
-  StoreCustomer:
+        description: "店铺地址" 
+  CreateStoreCustomer:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+        description: "客户姓名"
+      phone:
+        type: "string"
+        description: "联系电话"
+      address:
+        type: "string"
+        description: "地址"
+      remark:
+        type: "string"
+        description: "备注信息"
+  ResponseStoreCustomer:
     type: "object"
     properties:
       id:
@@ -960,7 +1177,22 @@ definitions:
       remark:
         type: "string"
         description: "备注信息"
-  StoreEmployee:
+  CreateStoreEmployee:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+        description: "员工姓名"
+      phone:
+        type: "string"
+        description: "联系电话"
+      address:
+        type: "string"
+        description: "地址"
+      remark:
+        type: "string"
+        description: "备注信息"
+  ResponseStoreEmployee:
     type: "object"
     properties:
       id:
@@ -982,7 +1214,20 @@ definitions:
       remark:
         type: "string"
         description: "备注信息"
-  StoreEmployeeRole:
+  CreateStoreEmployeeRole:
+    type: "object"
+    properties:
+      pid:
+        type: "integer"
+        format: "int64"
+        description: "角色父ID"
+      name:
+        type: "string"
+        description: "角色名称"
+      description:
+        type: "string"
+        description: "角色描述"
+  ResponseStoreEmployeeRole:
     type: "object"
     properties:
       id:
@@ -1002,7 +1247,22 @@ definitions:
       description:
         type: "string"
         description: "角色描述"
-  StoreSupplier:
+  CreateStoreSupplier:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+        description: "供应商名称"
+      linkman:
+        type: "string"
+        description: "联系人"
+      phone:
+        type: "string"
+        description: "联系电话"
+      address:
+        type: "string"
+        description: "地址"
+  ResponseStoreSupplier:
     type: "object"
     properties:
       id:
@@ -1024,7 +1284,22 @@ definitions:
       address:
         type: "string"
         description: "地址"
-  StoreRepository:
+  CreateStoreRepository:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+        description: "仓库名称"
+      linkman:
+        type: "string"
+        description: "联系人"
+      phone:
+        type: "string"
+        description: "联系电话"
+      address:
+        type: "string"
+        description: "地址"
+  ResponseStoreRepository:
     type: "object"
     properties:
       id:
@@ -1046,7 +1321,82 @@ definitions:
       address:
         type: "string"
         description: "地址"
-  Product:
+  CreateProduct:
+    type: "object"
+    properties:
+      supplier_id:
+        type: "integer"
+        format: "int64"
+        description: "商品供应商ID"
+      repository_id:
+        type: "integer"
+        format: "int64"
+        description: "商品所属仓库ID"
+      technic_id:
+        type: "integer"
+        format: "int64"
+        description: "商品工艺ID"
+      pattern_id:
+        type: "integer"
+        format: "int64"
+        description: "商品图案ID"
+      shape_id:
+        type: "integer"
+        format: "int64"
+        description: "商品器形ID"
+      type_id:
+        type: "integer"
+        format: "int64"
+        description: "商品类型ID"
+      brand_id:
+        type: "integer"
+        format: "int64"
+        description: "商品品牌ID"
+      itemcode:
+        type: "string"
+        description: "商品编号"
+      name:
+        type: "string"
+        description: "商品名"
+      purchase_price:
+        type: "integer"
+        format: "int64"
+        description: "商品进货价/成本"
+      selling_price:
+        type: "integer"
+        format: "int64"
+        description: "商品售价"
+      additional_cost:
+        type: "integer"
+        format: "int64"
+        description: "额外费用/包装费"
+      current_amount:
+        type: "integer"
+        format: "int64"
+        description: "商品当前库存"
+      alert_amount:
+        type: "integer"
+        format: "int64"
+        description: "商品警戒库存"
+      status:
+        type: "integer"
+        format: "int64"
+        description: "商品状态"
+      litpic:
+        type: "string"
+        description: "商品封面图"
+      piclist:
+        type: "string"
+        description: "商品图片列表"
+      addtime:
+        type: "integer"
+        format: "int64"
+        description: "商品添加时间"
+      modtime:
+        type: "integer"
+        format: "int64"
+        description: "商品修改时间"
+  ResponseProduct:
     type: "object"
     properties:
       id:
@@ -1128,4 +1478,49 @@ definitions:
         type: "integer"
         format: "int64"
         description: "商品修改时间"
+  checkUsername:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+        description: "准备注册的用户名"
+  loginInfo:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+        description: "用户名"
+      password:
+        type: "string"
+        description: "密码"
+  loginResponse:
+    type: "object"
+    properties:
+      result:
+        type: "boolean"
+        description: "登录成功还是失败"
+      id:
+        type: "integer"
+        format: "int64"
+        description: "登录成功，返回用户ID"
+      accessToken:
+        type: "string"
+        description: "加密生成的用户token"
+      name:
+        type: "string"
+        description: "用户名"
+      message:
+        type: "string"
+        description: "服务器返回的提示信息"
+  defaultResponse:
+    type: "object"
+    properties:
+      result:
+        type: "boolean"
+        description: "操作结果，true表示成功，false表示失败"
+      message:
+        type: "string"
+        description: "操作结果提示信息"
+        
+
 `
